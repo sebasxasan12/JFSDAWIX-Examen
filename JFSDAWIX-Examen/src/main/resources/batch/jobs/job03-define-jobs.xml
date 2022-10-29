@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch" xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch-3.0.xsd
+     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+
+	<!-- A. Referencia al contexto -->
+	<import resource="../config/job02-batch-context.xml" />
+
+	<!-- B. Definir los atributos o columnas del archivo que se va leer, así
+     mismo el delimitador entre campos -->
+	<bean id="idRutaToken" class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+		<property name="delimiter" value=","></property>
+		<property name="names" value="ID, EMPRESA, RUC, DIRECCION, UBICACION, FECHA, HORA, TIPO_COMPROBANTE, NUMERO_COMPROBANTE, CATEGORIA, IMPORTE"></property>
+	</bean>
+
+	<bean id="idRutaLineMapper" class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+		<property name="lineTokenizer" ref="idRutaToken" />
+		<property name="fieldSetMapper">
+			<bean class="pe.unjfsc.daw.spring5.mapper.CLRutaMapper"></bean>
+		</property>
+	</bean>
+
+	<!-- C. Definir el archivo de entrada y su ruta -->
+	<bean id="idRutaReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+		<description>Se define la fuente de entrada u origen de datos
+     </description>
+		<property name="resource" value="classpath:/fuente/input/RUTAS.csv"></property>
+		<property name="lineMapper" ref="idRutaLineMapper" />
+	</bean>
+
+	<batch:job id="idFirstJobBatch">
+		<batch:step id="idFirstStep">
+			<batch:tasklet>
+				<batch:chunk reader="idRutaReader" processor="idRutaProcesor" writer="idRutaWriter" commit-interval="6" />
+			</batch:tasklet>
+		</batch:step>
+	</batch:job>
+
+	<bean id="idRutaProcesor" class="pe.unjfsc.daw.spring5.process.CLRutaProcessor"></bean>
+
+	<bean id="idRutaWriter" class="pe.unjfsc.daw.spring5.writer.CDRutaWriter"></bean>
+
+</beans>
